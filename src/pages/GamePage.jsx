@@ -11,6 +11,7 @@ import { Slider } from '../components/atoms/Slider';
 import { conceptsData, codingTips } from '../data/concepts';
 import { sound } from '../services/sound';
 import { HelpCircle, Lightbulb, Search } from 'lucide-react';
+import mascotImage from '../assets/pyt.png';
 
 export const GamePage = () => {
   // -------------------------------------------------------------
@@ -777,12 +778,26 @@ export const GamePage = () => {
         leftSidebar={
           <>
             <TipPanel tipText={codingTips[tipIndex]} />
+            
+            {/* Mascot Illustration Panel (fills the empty space elegantly) */}
+            <div className="flex-grow flex items-center justify-center py-4 my-2 select-none animate-fade-in">
+              <div className="relative group max-w-[130px] sm:max-w-[150px] md:max-w-[165px] transition-all duration-500 hover:scale-105">
+                {/* Sutil halo de luz detrás */}
+                <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500" />
+                <img 
+                  src={mascotImage} 
+                  alt="Mascota Lagarto Programador" 
+                  className="w-full h-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+                />
+              </div>
+            </div>
+
             <Button 
               variant="secondary" 
               onClick={() => {
                 alert("¿Cómo jugar?\n\n1. Por turnos, cada jugador voltea dos cartas.\n2. Si las cartas coinciden (según el nivel), el jugador suma +5 pts y juega de nuevo.\n3. Si no coinciden, se voltean de regreso y pasa el turno.\n4. ¡El jugador con más puntos cuando se encuentren todas las parejas gana la partida!\n\nConsejo: ¡Usa las pistas del robot si te quedas atascado!");
               }}
-              className="w-full py-3.5 border border-indigo-950/60 shadow-lg text-indigo-300"
+              className="w-full py-3.5 border border-indigo-950/60 shadow-lg text-indigo-300 shrink-0"
             >
               <HelpCircle size={16} />
               <span>¿Cómo jugar?</span>
