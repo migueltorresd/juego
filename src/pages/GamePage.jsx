@@ -836,6 +836,7 @@ export const GamePage = () => {
             players={players} 
             currentPlayerIndex={currentPlayerIndex} 
             leaderId={leaderId} 
+            t={t}
           />
         }
         leftSidebar={

@@ -1,7 +1,8 @@
 export const PlayerCard = ({ 
   player, 
   isActive = false, 
-  isLeader = false 
+  isLeader = false,
+  t
 }) => {
   const { name, score, avatar, colorClass } = player;
 
@@ -17,7 +18,7 @@ export const PlayerCard = ({
       {isLeader && score > 0 && (
         <span 
           className="absolute -top-3 left-1/2 -translate-x-1/2 text-xl drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] animate-bounce select-none z-20"
-          title="¡Líder de la partida!"
+          title={t ? t('scoreboardLeaderTitle') : "¡Líder de la partida!"}
         >
           👑
         </span>
