@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concéntrese de Código</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Fredoka+One&display=swap');
+
+        :root {
+            --bg-color: #060814;
+            --panel-bg: rgba(20, 25, 50, 0.7);
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-green: #00ff66;
+            --neon-yellow: #ffcc00;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='rgba(255,255,255,0.15)'/%3E%3Ccircle cx='10' cy='10' r='0.5' fill='rgba(255,255,255,0.1)'/%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        .font-title {
+            font-family: 'Fredoka One', cursive, sans-serif;
+        }
+
+        /* --- Textos de Neón --- */
+        .text-glow-cyan {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        /* --- Paneles y Contenedores --- */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(79, 70, 229, 0.4);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(79, 70, 229, 0.1);
+        }
+
+        /* --- Estilos del Tablero --- */
+        .board-container {
+            border: 2px solid rgba(79, 70, 229, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5), 0 0 30px rgba(15, 23, 42, 0.8);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            background: #0f172a;
+            position: relative;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: minmax(30px, 50px) repeat(6, 1fr);
+            gap: clamp(8px, 1.5vw, 16px);
+            perspective: 1000px;
+            width: 100%;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .grid-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+            font-weight: 900;
+            font-family: 'Fredoka One', cursive;
+            user-select: none;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Colores específicos para las columnas según el diseño */
+        .col-A { color: #60a5fa; }
+        .col-B { color: #f43f5e; }
+        .col-C { color: #34d399; }
+        .col-D { color: #fbbf24; }
+        .col-E { color: #c084fc; }
+        .col-F { color: #2dd4bf; }
+        .row-num { color: #fcd34d; }
+
+        @media (max-width: 1024px) {
+            .side-panel {
+                display: none;
+            }
+            .game-board {
+                gap: 8px;
+                max-width: 90vw;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: 20px repeat(6, 1fr);
+                gap: 6px;
+                max-width: 98vw;
+            }
+            .grid-label {
+                font-size: 1.2rem;
+            }
+            .board-container {
+                padding: 0.8rem;
+                border-radius: 1rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .game-board {
+                gap: 4px;
+            }
+            .concept-text {
+                display: none;
+            }
+        }
+
+        /* --- Estilos de las Cartas --- */
+        .card {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+            cursor: pointer;
+            border-radius: 1.2rem;
+        }
+
+        .card:active {
+            transform: translateY(2px) scale(0.95);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1.2rem;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #5b21b6 0%, #3b0764 100%);
+            border: 2px solid #8b5cf6;
+            box-shadow: inset 0 0 20px rgba(124, 58, 237, 0.3), 0 0 15px rgba(124, 58, 237, 0.2);
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .card-front::after {
+            content: '?';
+            font-family: 'Fredoka One', cursive;
+            color: #d8b4fe;
+            font-size: clamp(2rem, 4vw, 4.5rem);
+            text-shadow: 0 0 20px rgba(192, 132, 252, 0.8), 0 0 40px rgba(168, 85, 247, 0.6);
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, #1e1b4b, #2e1065);
+            transform: rotateY(180deg);
+            border: 2px solid #a855f7;
+            display: flex;
+            flex-direction: column;
+            padding: clamp(4px, 1vw, 12px);
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(168, 85, 247, 0.3), 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card.matched .card-back {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            border: 3px solid #34d399;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(52, 211, 153, 0.4);
+            animation: pulse-match 2s infinite;
+            position: relative;
+        }
+        
+        .card.matched .card-back::before {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            color: #ecfdf5;
+            font-size: clamp(0.7rem, 1vw, 1.2rem);
+            background: #10b981;
+            border-radius: 50%;
+            width: clamp(16px, 2vw, 24px);
+            height: clamp(16px, 2vw, 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+
+        @keyframes pulse-match {
+            0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        }
+
+        .concept-text {
+            font-size: clamp(0.6rem, 1.2vw, 1.1rem);
+            font-weight: 800;
+            color: #e2e8f0;
+            margin-top: 4px;
+            line-height: 1.15;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .concept-icon {
+            font-size: clamp(1.4rem, 3vw, 3.5rem);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+        }
+
+        /* --- Jugadores de Neón --- */
+        .player-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid #334155;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .player-card.active {
+            opacity: 1;
+            transform: scale(1.05);
+            background: rgba(30, 41, 59, 0.9);
+            z-index: 10;
+        }
+
+        /* Estilos específicos por jugador */
+        .p-color-0.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+        }
+
+        .p-color-0 .p-name {
+            color: #60a5fa;
+        }
+
+        .p-color-1.active {
+            border-color: #ec4899;
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.6);
+        }
+
+        .p-color-1 .p-name {
+            color: #f472b6;
+        }
+
+        .p-color-2.active {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .p-color-2 .p-name {
+            color: #34d399;
+        }
+
+        .p-color-3.active {
+            border-color: #f59e0b;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+        }
+
+        .p-color-3 .p-name {
+            color: #fbbf24;
+        }
+
+        /* --- Modales --- */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.3s;
+        }
+
+        .hidden-screen {
+            opacity: 0;
+            pointer-events: none;
+            display: none !important;
+        }
+
+        .btn-neon {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border: 2px solid #8b5cf6;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+            transition: all 0.2s;
+        }
+
+        .btn-neon:hover {
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.8);
+            transform: scale(1.02);
+        }
+
+        .btn-neon:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Mascotas / SVG CSS Art --- */
+        .mascot-bubble {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .mascot-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: rgba(15, 23, 42, 0.8) transparent transparent transparent;
+            display: block;
+            width: 0;
+        }
+
+        .challenge-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.5rem;
+        }
+
+        .challenge-item.completed {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center">
+
+    <!-- PANTALLA DE CONFIGURACIÓN -->
+    <div id="setup-screen" class="fullscreen-modal">
+        <div class="glass-panel p-8 max-w-lg w-full text-center m-4">
+            <h1 class="text-4xl text-white mb-2 font-title">🎮 Concéntrese de <span class="text-glow-cyan">Código</span>
+            </h1>
+            <p class="text-gray-300 mb-6 font-bold text-lg">Inicia sesión en la terminal</p>
+
+            <div id="players-input-container" class="space-y-3 mb-6 text-left">
+                <!-- Inputs se inyectan aquí -->
+            </div>
+
+            <!-- NUEVO: Selector de Nivel de Dificultad -->
+            <div class="mb-8 text-left bg-slate-800/80 p-4 rounded-xl border border-slate-600 shadow-inner">
+                <label class="block text-indigo-300 font-bold mb-3 text-center">Selecciona el Nivel del
+                    Servidor:</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="difficulty" value="basic" checked class="hidden peer">
+                        <div
+                            class="h-full border-2 border-slate-600 rounded-lg p-3 text-center peer-checked:border-blue-400 peer-checked:bg-blue-900/30 transition bg-slate-900 hover:bg-slate-800">
+                            <div class="text-2xl mb-1">🌱</div>
+                            <div class="peer-checked:text-blue-400 text-gray-300 font-bold">Básico</div>
+                            <div class="text-[0.65rem] text-slate-400 mt-1 uppercase">Fundamentos</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="difficulty" value="intermediate" class="hidden peer">
+                        <div
+                            class="h-full border-2 border-slate-600 rounded-lg p-3 text-center peer-checked:border-pink-400 peer-checked:bg-pink-900/30 transition bg-slate-900 hover:bg-slate-800">
+                            <div class="text-2xl mb-1">🏗️</div>
+                            <div class="peer-checked:text-pink-400 text-gray-300 font-bold">Intermedio</div>
+                            <div class="text-[0.65rem] text-slate-400 mt-1 uppercase">POO y Clases</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="difficulty" value="advanced" class="hidden peer">
+                        <div
+                            class="h-full border-2 border-slate-600 rounded-lg p-3 text-center peer-checked:border-green-400 peer-checked:bg-green-900/30 transition bg-slate-900 hover:bg-slate-800">
+                            <div class="text-2xl mb-1">🚀</div>
+                            <div class="peer-checked:text-green-400 text-gray-300 font-bold">Avanzado</div>
+                            <div class="text-[0.65rem] text-slate-400 mt-1 uppercase">Git y Web</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4 mb-8">
+                <button onclick="removePlayerInput()"
+                    class="bg-slate-800 text-red-400 hover:text-red-300 border border-red-500/50 font-bold py-2 px-4 rounded-xl transition">
+                    ➖ Quitar
+                </button>
+                <button onclick="addPlayerInput()"
+                    class="bg-slate-800 text-green-400 hover:text-green-300 border border-green-500/50 font-bold py-2 px-4 rounded-xl transition">
+                    ➕ Agregar (Max 4)
+                </button>
+            </div>
+
+            <button onclick="startGame()"
+                class="btn-neon w-full text-white text-2xl py-4 px-6 rounded-2xl font-title tracking-wide">
+                🚀 START SYSTEM
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="game-screen" class="w-full flex-col items-center hidden-screen pt-4 px-2 sm:px-6 w-full max-w-[1600px] mx-auto min-h-screen">
+
+        <!-- HEADER (Nivel, Título, Botones) -->
+        <header class="w-full relative flex flex-col md:flex-row items-center justify-between mb-8 px-2 lg:px-6 mt-2">
+            <div class="flex flex-col mb-4 md:mb-0 z-10 min-w-[200px]">
+                <div class="flex items-center gap-3">
+                    <span class="text-4xl drop-shadow-[0_0_10px_gold]">⭐</span>
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 font-bold text-[0.65rem] uppercase tracking-widest">Nivel</span>
+                        <span id="display-level" class="text-xl font-title text-indigo-300 leading-none">Avanzado</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 mt-2 bg-indigo-950/60 border border-indigo-900/40 rounded-full px-3 py-1 shadow-inner">
+                    <div class="flex-1 bg-indigo-900/50 rounded-full h-2 overflow-hidden">
+                        <div class="bg-indigo-500 h-2 rounded-full shadow-[0_0_10px_indigo]" style="width: 70%"></div>
+                    </div>
+                    <span class="text-[0.65rem] text-slate-300 font-bold whitespace-nowrap">850/1200 XP</span>
+                </div>
+            </div>
+
+            <div class="text-center z-10 md:absolute md:left-1/2 md:-translate-x-1/2 w-full md:w-auto pointer-events-none">
+                <h1 class="text-3xl md:text-5xl text-white mb-2 font-title drop-shadow-lg">
+                    Concéntrate de <span class="text-glow-cyan">Código</span> <span class="text-green-400 font-black">&lt;/&gt;</span>
+                </h1>
+                <p class="text-slate-400 text-sm md:text-base font-medium">¡Encuentra todas las parejas y entrena tu mente de programador!</p>
+            </div>
+
+            <div class="flex gap-3 mt-4 md:mt-0 z-10 w-full md:w-auto justify-end">
+                <button onclick="showSetupScreen()"
+                    class="bg-indigo-700/80 hover:bg-indigo-600 border border-indigo-400 text-white font-bold py-2 px-5 rounded-xl text-sm flex items-center gap-2 transition shadow-[0_0_15px_rgba(79,70,229,0.5)] backdrop-blur-md">
+                    🔄 Reiniciar
+                </button>
+            </div>
+        </header>
+
+        <!-- SCOREBOARD (Jugadores) -->
+        <div id="scoreboard" class="flex flex-wrap justify-center gap-3 md:gap-5 mb-8 w-full px-2 z-10">
+            <!-- Marcadores se inyectan aquí -->
+        </div>
+
+        <!-- MAIN LAYOUT (3 Columnas) -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start justify-center flex-grow">
+
+            <!-- PANEL IZQUIERDO: Tip y Controles extra -->
+            <div class="hidden lg:flex flex-col justify-between lg:col-span-3 xl:col-span-2 side-panel mt-10 w-full animate-fade-in h-[32rem]">
+                
+                <div class="glass-panel w-full p-5 relative">
+                    <h3 class="text-yellow-400 font-bold flex items-center gap-2 mb-3 font-title"><span class="text-xl drop-shadow-md">💡</span> Tip de código</h3>
+                    <p id="tip-text" class="text-slate-300 text-sm xl:text-base leading-relaxed mb-4">
+                        La lógica es como un algoritmo: paso a paso, llegas lejos.
+                    </p>
+                    <div class="absolute right-4 top-4 bg-indigo-950/60 rounded-xl p-2 w-max text-indigo-300 text-xs font-bold border border-indigo-700/50 shadow-inner">{ }</div>
+                </div>
+
+                <div class="flex-1 w-full bg-cover bg-center bg-no-repeat mt-4 rounded-xl">
+                </div>
+
+                <button class="mt-4 bg-indigo-900/50 border border-indigo-700/50 text-indigo-200 px-4 py-3 rounded-xl text-sm flex items-center gap-3 hover:bg-indigo-800/50 transition w-full shadow-lg">
+                    <span class="bg-indigo-600 rounded-full w-6 h-6 flex items-center justify-center text-white font-bold text-xs shadow-inner">?</span> ¿Cómo jugar?
+                </button>
+            </div>
+
+            <!-- PANEL CENTRAL: Tablero -->
+            <div class="col-span-1 lg:col-span-6 xl:col-span-8 flex flex-col items-center w-full">
+                <!-- Indicador de Parejas Integrado en placa -->
+                <div class="bg-[#0f172a] border border-blue-900/40 rounded-full py-2 px-6 flex items-center gap-3 shadow-[0_5px_15px_rgba(0,0,0,0.5)] mb-4 -mt-6 z-20">
+                    <span class="text-indigo-400">👥</span>
+                    <span class="text-sm font-bold text-slate-300">Parejas encontradas: <span id="global-matches" class="text-indigo-300 font-title text-lg">0</span> <span class="text-slate-500">/ 12</span></span>
+                    <div class="w-24 md:w-32 bg-indigo-950 rounded-full h-2 hidden sm:block ml-2">
+                        <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full shadow-[0_0_10px_indigo] transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- EL TABLERO -->
+                <div class="board-container w-full">
+                    <main class="game-board" id="game-board">
+                        <!-- Las cartas se generan con JavaScript -->
+                    </main>
+                </div>
+
+                <!-- Banner motivacional inferior -->
+                <div
+                    class="mt-8 bg-slate-900/80 border border-slate-700/50 rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center gap-4 w-full max-w-3xl mx-auto shadow-lg backdrop-blur-md">
+                    <div class="text-5xl drop-shadow-[0_0_15px_rgba(79,70,229,0.5)]">🤖</div>
+                    <div class="flex flex-col text-center sm:text-left">
+                        <span class="text-white font-bold text-lg mb-1">¡Excelente! 🤩</span>
+                        <span class="text-slate-300 text-sm">Encuentra todas las parejas para ganar. <span class="text-green-400 font-bold">Concentración</span> = Éxito.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: Desafíos, Progreso y Racha -->
+            <div class="hidden lg:flex flex-col lg:col-span-3 xl:col-span-2 side-panel w-full animate-fade-in gap-4 xl:gap-5 mt-10">
+                
+                <!-- Desafíos -->
+                <div class="glass-panel w-full p-4">
+                    <h3 class="text-yellow-400 font-bold flex items-center gap-2 mb-4 font-title"><span class="text-xl drop-shadow-md">🏆</span> Desafíos</h3>
+                    <div class="flex flex-col gap-3">
+                        <div id="challenge-3" class="flex items-center justify-between border-b border-indigo-900/30 pb-2">
+                            <div class="flex items-center gap-2"><span class="bg-green-600 shadow-[0_0_8px_green] rounded-full text-white w-4 h-4 flex items-center justify-center text-[0.6rem]">✓</span><span class="text-xs text-slate-300">Completa 3 parejas</span></div><span class="text-xs text-yellow-500 font-bold">+10 pts</span>
+                        </div>
+                        <div id="challenge-6" class="flex items-center justify-between border-b border-indigo-900/30 pb-2">
+                            <div class="flex items-center gap-2"><span class="bg-green-600 shadow-[0_0_8px_green] rounded-full text-white w-4 h-4 flex items-center justify-center text-[0.6rem]">✓</span><span class="text-xs text-slate-300">Completa 6 parejas</span></div><span class="text-xs text-yellow-500 font-bold">+20 pts</span>
+                        </div>
+                        <div id="challenge-9" class="flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span class="bg-purple-600 shadow-[0_0_8px_purple] rounded-full text-white w-4 h-4 flex items-center justify-center text-[0.6rem]">✓</span><span class="text-xs text-slate-300">Completa 12 parejas</span></div><span class="text-xs text-purple-400 font-bold">+50 pts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tu Progreso -->
+                <div class="glass-panel w-full p-4">
+                    <h3 class="text-indigo-400 font-bold flex items-center gap-2 mb-4 font-title"><span class="text-xl">📈</span> Tu progreso</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 flex flex-col gap-2">
+                            <div class="flex items-center gap-2"><span class="bg-indigo-600 text-white text-[0.6rem] px-1 rounded font-bold">XP</span> <span class="font-bold text-xs text-white">850 / 1200</span></div>
+                            <div class="w-full bg-indigo-950 rounded-full h-1.5">
+                                <div class="bg-indigo-500 h-1.5 rounded-full shadow-[0_0_8px_indigo]" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <!-- Hexagon Badge -->
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-900 to-indigo-950 border-2 border-indigo-500 rounded-xl rotate-45 flex items-center justify-center shadow-[0_0_10px_rgba(79,70,229,0.5)] shrink-0">
+                            <div class="-rotate-45 text-center leading-none text-[0.45rem] font-bold">
+                                <span class="text-white text-sm">&lt;/&gt;</span><br><span class="text-orange-400">Programador</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Racha actual -->
+                <div class="glass-panel w-full p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-orange-400 font-bold flex items-center gap-1 text-xs"><span class="text-base drop-shadow-[0_0_5px_orange]">🔥</span> Racha actual</span>
+                        <span class="text-yellow-400 font-title text-sm">7 días</span>
+                    </div>
+                    <div class="flex justify-between w-full">
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">L</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">M</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">M</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">J</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">V</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-[0.5rem]">✓</div><span class="text-[0.6rem] text-slate-400 font-bold">S</span></div>
+                        <div class="flex flex-col items-center gap-1"><div class="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center text-white text-[0.5rem] shadow-[0_0_8px_gold]">⭐</div><span class="text-[0.6rem] text-slate-200 font-bold drop-shadow-md">D</span></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PANTALLA DE VICTORIA -->
+    <div id="victory-modal" class="fullscreen-modal hidden-screen">
+        <div class="glass-panel p-8 max-w-md w-full text-center m-4 border-t-4 border-green-400">
+            <div class="text-7xl mb-4 animate-bounce drop-shadow-[0_0_20px_gold]">🏆</div>
+            <h2 class="text-4xl text-green-400 mb-2 font-title text-glow-cyan">¡Misión Cumplida!</h2>
+
+            <div id="victory-results" class="my-6 space-y-3 text-lg font-bold text-white">
+                <!-- Resultados -->
+            </div>
+
+            <button onclick="showSetupScreen()"
+                class="btn-neon w-full text-white text-xl py-4 px-6 rounded-2xl font-title mt-4">
+                🔄 Iniciar nueva sesión
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // -------------------------------------------------------------
+        // DATOS DEL JUEGO
+        // -------------------------------------------------------------
+        const conceptSets = {
+            basic: [
+                { id: 1, icon: '🐛', text: 'Bug (Error)' },
+                { id: 2, icon: '🔄', text: 'Bucle (Loop)' },
+                { id: 3, icon: '📦', text: 'Variable' },
+                { id: 4, icon: '🚦', text: 'Condición (If)' },
+                { id: 5, icon: '🤖', text: 'Algoritmo' },
+                { id: 6, icon: '📝', text: 'Código' },
+                { id: 7, icon: '⚙️', text: 'Función' },
+                { id: 8, icon: '💾', text: 'Datos' },
+                { id: 9, icon: '🌐', text: 'Red (Web)' },
+                { id: 10, icon: '💻', text: 'Hardware' },
+                { id: 11, icon: '💿', text: 'Software' },
+                { id: 12, icon: '⌨️', text: 'Input' }
+            ],
+            intermediate: [
+                { id: 1, icon: '🏗️', text: 'Clase' },
+                { id: 2, icon: '🧸', text: 'Objeto' },
+                { id: 3, icon: '🧬', text: 'Herencia' },
+                { id: 4, icon: '🎭', text: 'Polimorfismo' },
+                { id: 5, icon: '💊', text: 'Encapsular' },
+                { id: 6, icon: '👻', text: 'Abstracción' },
+                { id: 7, icon: '🏃', text: 'Método' },
+                { id: 8, icon: '🏷️', text: 'Atributo' },
+                { id: 9, icon: '✨', text: 'Instancia' },
+                { id: 10, icon: '🏭', text: 'Constructor' },
+                { id: 11, icon: '🔌', text: 'Interfaz' },
+                { id: 12, icon: '👑', text: 'Superclase' }
+            ],
+            advanced: [
+                { id: 1, icon: '🌳', text: 'Git (Historial)' },
+                { id: 2, icon: '📸', text: 'Commit (Guardar)' },
+                { id: 3, icon: '🚀', text: 'Push (Subir)' },
+                { id: 4, icon: '⬇️', text: 'Pull (Bajar)' },
+                { id: 5, icon: '🌿', text: 'Rama (Branch)' },
+                { id: 6, icon: '🤝', text: 'Merge (Unir)' },
+                { id: 7, icon: '🐙', text: 'GitHub (Nube)' },
+                { id: 8, icon: '🌐', text: 'Internet' },
+                { id: 9, icon: '🗄️', text: 'Servidor' },
+                { id: 10, icon: '🔗', text: 'URL (Enlace)' },
+                { id: 11, icon: '🎁', text: 'Open Source' },
+                { id: 12, icon: '👾', text: 'Píxel' }
+            ]
+        };
+
+        let concepts = []; // Se llenará al iniciar según el nivel
+        const avatars = ['😎', '🦄', '👾', '🦊'];
+
+        // Tips dinámicos para el panel izquierdo
+        const tips = [
+            "La lógica es como un algoritmo: paso a paso, llegas lejos.",
+            "Si encuentras un Bug 🐛, no te asustes, ¡hasta los profesionales los tienen!",
+            "Usa tu Memoria RAM (cerebro) para recordar las posiciones.",
+            "Una Función ⚙️ te ahorra escribir el mismo código muchas veces.",
+            "¡Mantén la concentración! Un buen programador siempre presta atención a los detalles."
+        ];
+
+        let players = [];
+        let currentPlayerIndex = 0;
+        let globalMatches = 0;
+
+        let cards = [];
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+
+        // -------------------------------------------------------------
+        // CONFIGURACIÓN DE JUGADORES
+        // -------------------------------------------------------------
+        function initSetup() {
+            const container = document.getElementById('players-input-container');
+            container.innerHTML = '';
+            addPlayerInput('PEPITO');
+            addPlayerInput('JUANITA');
+        }
+
+        function addPlayerInput(defaultName = '') {
+            const container = document.getElementById('players-input-container');
+            const playerCount = container.children.length;
+
+            if (playerCount >= 4) return alert("¡El máximo es 4 jugadores!");
+
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-3 bg-slate-800/80 p-3 rounded-xl border border-slate-600';
+            div.innerHTML = `
+                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-2xl border-2 border-slate-500">${avatars[playerCount]}</div>
+                <input type="text" class="player-name-input flex-1 bg-transparent text-lg font-bold outline-none text-white placeholder-slate-400 uppercase" 
+                       placeholder="JUGADOR ${playerCount + 1}" 
+                       value="${defaultName}" maxlength="10">
+            `;
+            container.appendChild(div);
+        }
+
+        function removePlayerInput() {
+            const container = document.getElementById('players-input-container');
+            if (container.children.length > 1) container.removeChild(container.lastChild);
+        }
+
+        function showSetupScreen() {
+            document.getElementById('setup-screen').classList.remove('hidden-screen');
+            document.getElementById('game-screen').classList.add('hidden-screen');
+            document.getElementById('victory-modal').classList.add('hidden-screen');
+        }
+
+        function startGame() {
+            const inputs = document.querySelectorAll('.player-name-input');
+            players = [];
+            inputs.forEach((input, index) => {
+                let name = input.value.trim().toUpperCase();
+                if (!name) name = `P${index + 1}`;
+                players.push({
+                    id: index,
+                    name: name,
+                    score: 0,
+                    avatar: avatars[index],
+                    colorClass: `p-color-${index}` // Clases para los neones específicos
+                });
+            });
+
+            // Leer dificultad seleccionada
+            const selectedDifficulty = document.querySelector('input[name="difficulty"]:checked').value;
+            concepts = conceptSets[selectedDifficulty];
+
+            // Actualizar etiqueta del nivel en la interfaz
+            const levelNames = { basic: 'Básico', intermediate: 'Intermedio (POO)', advanced: 'Avanzado' };
+            document.getElementById('display-level').innerText = levelNames[selectedDifficulty];
+
+            document.getElementById('setup-screen').classList.add('hidden-screen');
+            document.getElementById('game-screen').classList.remove('hidden-screen');
+
+            initBoard();
+        }
+
+        // -------------------------------------------------------------
+        // LÓGICA DEL JUEGO
+        // -------------------------------------------------------------
+        let tipInterval;
+
+        function initBoard() {
+            currentPlayerIndex = 0;
+            globalMatches = 0;
+            hasFlippedCard = false;
+            lockBoard = false;
+            firstCard = null;
+            secondCard = null;
+
+            document.getElementById('global-matches').innerText = '0';
+            resetChallengesUI();
+            
+            changeTip();
+            if (tipInterval) clearInterval(tipInterval);
+            tipInterval = setInterval(changeTip, 7000); // Tip rotates every 7 seconds
+
+            renderScoreboard();
+            createCards();
+        }
+
+        function renderScoreboard() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = '';
+
+            players.forEach((player, index) => {
+                const isActive = index === currentPlayerIndex;
+                const activeState = isActive ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.6)] bg-slate-800' : 'border-slate-700 opacity-80 hover:opacity-100 bg-slate-900/80';
+
+                const badge = document.createElement('div');
+                badge.className = `player-card ${player.colorClass} ${isActive ? 'active' : ''} flex items-center gap-4 px-4 py-2 rounded-2xl min-w-[160px] border-2 backdrop-blur-md transition-all duration-300 ${activeState}`;
+
+                badge.innerHTML = `
+                    <div class="bg-gradient-to-br from-slate-200 to-slate-400 rounded-xl w-12 h-12 flex items-center justify-center text-3xl shadow-inner border border-slate-400 text-slate-800">${player.avatar}</div>
+                    <div class="flex flex-col text-left">
+                        <span class="p-name text-xs font-black tracking-widest text-slate-300 uppercase">${player.name}</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-white font-title text-2xl drop-shadow-sm">${player.score} <span class="text-slate-400 text-xs font-bold">pts</span></span>
+                            ${player.score > 0 ? '<span class="text-sm ml-1 drop-shadow-[0_0_5px_gold]">⭐</span>' : ''}
+                        </div>
+                    </div>
+                `;
+                scoreboard.appendChild(badge);
+            });
+        }
+
+        function createCards() {
+            const boardElement = document.getElementById('game-board');
+            boardElement.innerHTML = '';
+
+            cards = [...concepts, ...concepts];
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+
+            // Esquina superior izquierda
+            boardElement.appendChild(document.createElement('div'));
+
+            // Letras de columnas (con sus colores)
+            const colConfig = [
+                { l: 'A', c: 'col-A' }, { l: 'B', c: 'col-B' }, { l: 'C', c: 'col-C' },
+                { l: 'D', c: 'col-D' }, { l: 'E', c: 'col-E' }, { l: 'F', c: 'col-F' }
+            ];
+
+            colConfig.forEach(config => {
+                const label = document.createElement('div');
+                label.className = `grid-label ${config.c}`;
+                label.innerText = config.l;
+                boardElement.appendChild(label);
+            });
+
+            // Filas
+            let cardIndex = 0;
+            for (let row = 1; row <= 4; row++) {
+                const rowLabel = document.createElement('div');
+                rowLabel.className = 'grid-label row-num';
+                rowLabel.innerText = row;
+                boardElement.appendChild(rowLabel);
+
+                for (let col = 0; col < 6; col++) {
+                    const concept = cards[cardIndex];
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('card');
+                    cardElement.dataset.conceptId = concept.id;
+
+                    cardElement.innerHTML = `
+                        <div class="card-face card-front"></div>
+                        <div class="card-face card-back">
+                            <span class="concept-icon">${concept.icon}</span>
+                            <span class="concept-text">${concept.text}</span>
+                        </div>
+                    `;
+
+                    cardElement.addEventListener('click', flipCard);
+                    boardElement.appendChild(cardElement);
+                    cardIndex++;
+                }
+            }
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.conceptId === secondCard.dataset.conceptId;
+
+            if (isMatch) {
+                handleMatch();
+            } else {
+                handleMismatch();
+            }
+        }
+
+        function handleMatch() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+
+            // Puntuación base
+            players[currentPlayerIndex].score += 5;
+            globalMatches++;
+
+            document.getElementById('global-matches').innerText = globalMatches;
+
+            // Verificar Bonificaciones (Desafíos)
+            checkChallenges();
+
+            renderScoreboard();
+
+            if (globalMatches === concepts.length) {
+                setTimeout(showVictory, 1000);
+            } else {
+                // Cambiar tip ocasionalmente si hay match
+                if (Math.random() > 0.5) changeTip();
+            }
+
+            resetBoardVariables();
+        }
+
+        function handleMismatch() {
+            lockBoard = true;
+
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+
+                // Pasar turno
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                renderScoreboard();
+
+                resetBoardVariables();
+            }, 1200);
+        }
+
+        function resetBoardVariables() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        // -------------------------------------------------------------
+        // SISTEMA DE DESAFÍOS Y TIPS
+        // -------------------------------------------------------------
+        function checkChallenges() {
+            const player = players[currentPlayerIndex];
+
+            if (globalMatches === 3) {
+                player.score += 10;
+                completeChallenge('challenge-3', player.name);
+            } else if (globalMatches === 6) {
+                player.score += 20;
+                completeChallenge('challenge-6', player.name);
+            } else if (globalMatches === 9) {
+                player.score += 30;
+                completeChallenge('challenge-9', player.name);
+            }
+        }
+
+        function completeChallenge(id, playerName) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('completed');
+                el.innerHTML = `<span class="text-white font-bold text-sm">✅ Completado por ${playerName}</span>`;
+            }
+        }
+
+        function resetChallengesUI() {
+            document.getElementById('challenge-3').className = 'challenge-item';
+            document.getElementById('challenge-3').innerHTML = `<span class="text-slate-300 text-sm">⭐ 3 parejas</span><span class="text-yellow-400 font-bold text-sm">+10 pts</span>`;
+
+            document.getElementById('challenge-6').className = 'challenge-item';
+            document.getElementById('challenge-6').innerHTML = `<span class="text-slate-300 text-sm">🌟 6 parejas</span><span class="text-yellow-400 font-bold text-sm">+20 pts</span>`;
+
+            document.getElementById('challenge-9').className = 'challenge-item';
+            document.getElementById('challenge-9').innerHTML = `<span class="text-slate-300 text-sm">✨ 9 parejas</span><span class="text-yellow-400 font-bold text-sm">+30 pts</span>`;
+        }
+
+        function changeTip() {
+            const tipEl = document.getElementById('tip-text');
+            const randomTip = tips[Math.floor(Math.random() * tips.length)];
+            tipEl.style.opacity = 0;
+            setTimeout(() => {
+                tipEl.innerText = randomTip;
+                tipEl.style.opacity = 1;
+            }, 300);
+        }
+
+        // -------------------------------------------------------------
+        // VICTORIA
+        // -------------------------------------------------------------
+        function showVictory() {
+            const modal = document.getElementById('victory-modal');
+            const resultsContainer = document.getElementById('victory-results');
+
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            const highestScore = sortedPlayers[0].score;
+            const winners = sortedPlayers.filter(p => p.score === highestScore);
+
+            let html = '';
+
+            if (winners.length > 1) {
+                html += `<p class="text-2xl text-blue-400 mb-4 font-title">¡Empate en la terminal!</p>`;
+            } else {
+                html += `<p class="text-3xl text-green-400 mb-4 font-title">¡${winners[0].name} es el Master!</p>`;
+            }
+
+            html += `<div class="bg-slate-800 rounded-xl p-4 border border-slate-600">`;
+            sortedPlayers.forEach((p, index) => {
+                const medal = index === 0 && winners.length === 1 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : '💻'));
+                html += `
+                    <div class="flex justify-between items-center py-3 ${index !== sortedPlayers.length - 1 ? 'border-b border-slate-700' : ''}">
+                        <span class="text-xl flex items-center gap-2">${medal} ${p.avatar} <span class="uppercase">${p.name}</span></span>
+                        <span class="text-2xl font-title text-glow-cyan">${p.score} <span class="text-xs text-slate-400">pts</span></span>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            resultsContainer.innerHTML = html;
+            modal.classList.remove('hidden-screen');
+        }
+
+        window.onload = initSetup;
+
+    </script>
+</body>
+
+</html>
