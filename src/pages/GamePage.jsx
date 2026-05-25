@@ -780,15 +780,25 @@ export const GamePage = () => {
             <TipPanel tipText={codingTips[tipIndex]} />
             
             {/* Mascot Illustration Panel (fills the empty space elegantly) */}
-            <div className="flex-grow flex items-center justify-center py-4 my-2 select-none animate-fade-in">
-              <div className="relative group max-w-[130px] sm:max-w-[150px] md:max-w-[165px] transition-all duration-500 hover:scale-105">
-                {/* Sutil halo de luz detrás */}
-                <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500" />
-                <img 
-                  src={mascotImage} 
-                  alt="Mascota Lagarto Programador" 
-                  className="w-full h-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-                />
+            <div className="flex-grow flex items-center justify-center py-3 select-none animate-fade-in w-full">
+              <div className={`${
+                theme === 'light' 
+                  ? 'bg-white/85 border-slate-200 shadow-[0_4px_25px_rgba(0,0,0,0.04)]' 
+                  : 'bg-[#0f172a]/55 border-indigo-500/15 shadow-[0_8px_30px_rgba(0,0,0,0.3)]'
+              } border rounded-3xl p-5 w-full flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-indigo-400/50 group`}>
+                
+                {/* Sutil brillo decorativo interno */}
+                <div className={`absolute -inset-0.5 rounded-3xl opacity-10 bg-gradient-to-b ${
+                  theme === 'light' ? 'from-indigo-400 to-transparent' : 'from-cyan-400 to-transparent'
+                }`} />
+
+                <div className="relative w-full max-w-[200px] lg:max-w-[245px] xl:max-w-[210px] transition-transform duration-500 hover:scale-105">
+                  <img 
+                    src={mascotImage} 
+                    alt="Mascota Lagarto Programador" 
+                    className="w-full h-auto object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.55)]"
+                  />
+                </div>
               </div>
             </div>
 
@@ -805,18 +815,36 @@ export const GamePage = () => {
           </>
         }
         boardProgress={
-          <div className="bg-[#0f172a]/95 border border-indigo-500/25 rounded-full py-2 px-6 sm:py-2.5 sm:px-8 flex items-center gap-3 sm:gap-4 shadow-[0_6px_20px_rgba(0,0,0,0.4)] mb-3 z-20 select-none backdrop-blur-md">
-            <span className="text-cyan-400 text-base sm:text-xl drop-shadow-[0_0_6px_rgba(34,211,238,0.3)]">🧩</span>
-            <span className="text-xs sm:text-sm font-black text-slate-300 uppercase tracking-wider">
+          <div className={`${
+            theme === 'light' 
+              ? 'bg-white/95 border-slate-200 shadow-[0_6px_20px_rgba(0,0,0,0.06)]' 
+              : 'bg-[#0f172a]/95 border-indigo-500/25 shadow-[0_6px_20px_rgba(0,0,0,0.4)]'
+          } border rounded-full py-2 px-6 sm:py-2.5 sm:px-8 flex items-center gap-3 sm:gap-4 mb-3 z-20 select-none backdrop-blur-md`}>
+            <span className={`${
+              theme === 'light' ? 'text-indigo-600' : 'text-cyan-400'
+            } text-base sm:text-xl drop-shadow-sm`}>🧩</span>
+            <span className={`text-xs sm:text-sm font-black ${
+              theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+            } uppercase tracking-wider`}>
               Parejas encontradas:{' '}
-              <span className="text-cyan-400 font-title text-base sm:text-2xl ml-1 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+              <span className={`${
+                theme === 'light' ? 'text-indigo-600' : 'text-cyan-400'
+              } font-title text-base sm:text-2xl ml-1 drop-shadow-sm`}>
                 {globalMatches}
               </span>{' '}
-              <span className="text-slate-500 font-black text-[11px] sm:text-base">/ {pairsCount}</span>
+              <span className={`${
+                theme === 'light' ? 'text-slate-400' : 'text-slate-500'
+              } font-black text-[11px] sm:text-base`}>/ {pairsCount}</span>
             </span>
-            <div className="w-24 sm:w-44 md:w-56 bg-slate-950 rounded-full h-2.5 overflow-hidden ml-2 border border-slate-900 shadow-inner">
+            <div className={`w-24 sm:w-44 md:w-56 ${
+              theme === 'light' ? 'bg-slate-200 border-slate-300' : 'bg-slate-950 border-slate-900'
+            } rounded-full h-2.5 overflow-hidden ml-2 border shadow-inner`}>
               <div 
-                className="bg-gradient-to-r from-cyan-400 to-indigo-500 h-full rounded-full shadow-[0_0_8px_rgba(34,211,238,0.6)] transition-all duration-500" 
+                className={`${
+                  theme === 'light' 
+                    ? 'bg-gradient-to-r from-indigo-500 to-violet-600 shadow-[0_0_8px_rgba(79,70,229,0.3)]' 
+                    : 'bg-gradient-to-r from-cyan-400 to-indigo-500 shadow-[0_0_8px_rgba(34,211,238,0.6)]'
+                } h-full rounded-full transition-all duration-500`} 
                 style={{ width: `${(globalMatches / pairsCount) * 100}%` }}
               />
             </div>
