@@ -53,7 +53,7 @@ export const GameHeader = ({
       </div>
 
       {/* Right side: Audio controls, language toggle & reset button */}
-      <div className="flex gap-2 shrink-0 justify-end w-full lg:w-auto">
+      <div className="flex flex-wrap gap-1.5 shrink-0 justify-center lg:justify-end w-full lg:w-auto px-2">
         {/* Language Toggle Button */}
         <Button 
           variant="icon" 
@@ -102,7 +102,7 @@ export const GameHeader = ({
           className="border border-indigo-500/40 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)] hover:shadow-[0_0_18px_rgba(99,102,241,0.6)]"
         >
           <RotateCcw size={14} />
-          <span>{t('headerRestartBtn')}</span>
+          <span className="hidden sm:inline">{t('headerRestartBtn')}</span>
         </Button>
 
         {/* Home/Exit button */}
@@ -113,7 +113,7 @@ export const GameHeader = ({
           className="border border-indigo-500/40 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)] hover:shadow-[0_0_18px_rgba(99,102,241,0.6)]"
         >
           <Home size={14} />
-          <span>{t('headerHomeBtn')}</span>
+          <span className="hidden sm:inline">{t('headerHomeBtn')}</span>
         </Button>
       </div>
 
