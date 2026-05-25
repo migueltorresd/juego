@@ -9,11 +9,14 @@ export const GameHeader = ({
   musicEnabled = false, 
   sfxEnabled = false, 
   theme = 'dark',
+  language = 'es',
+  onToggleLanguage,
   onToggleTheme,
   onToggleMusic,
   onToggleSFX,
   onRestart,
-  onExitToSetup
+  onExitToSetup,
+  t
 }) => {
   return (
     <header className="w-full flex flex-col lg:flex-row items-center justify-between gap-3 py-2 px-4 lg:px-6 relative border-b border-indigo-950/30">
@@ -26,7 +29,7 @@ export const GameHeader = ({
         <div className="flex flex-col flex-1 gap-0.5">
           <div className="flex justify-between items-baseline gap-2">
             <span className="text-slate-400 font-bold text-[0.6rem] uppercase tracking-widest">
-              Nivel
+              {t('headerLevel')}
             </span>
             <span className="text-[0.6rem] text-slate-300 font-bold">
               {playerXP}/{maxXP} XP
@@ -42,20 +45,30 @@ export const GameHeader = ({
       {/* Center: Title & subtitle */}
       <div className="text-center flex-1 z-10 pointer-events-none select-none my-2 lg:my-0">
         <h1 className="text-2xl sm:text-3xl md:text-4xl text-white font-title drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-          Concéntrate de <span class="text-glow-cyan">Código</span> <span className="text-emerald-400 font-black">&lt;/&gt;</span>
+          {t('headerTitle')} <span className="text-glow-cyan">{t('headerTitleSpan')}</span> <span className="text-emerald-400 font-black">&lt;/&gt;</span>
         </h1>
         <p className="text-slate-400 text-xs sm:text-sm font-medium mt-1">
-          ¡Encuentra todas las parejas y entrena tu mente de programador!
+          {t('headerSubtitle')}
         </p>
       </div>
 
-      {/* Right side: Audio controls & reset button */}
+      {/* Right side: Audio controls, language toggle & reset button */}
       <div className="flex gap-2 shrink-0 justify-end w-full lg:w-auto">
+        {/* Language Toggle Button */}
+        <Button 
+          variant="icon" 
+          onClick={onToggleLanguage} 
+          title={language === 'es' ? "Switch to English" : "Cambiar a Español"}
+          className="text-indigo-400 border-indigo-900/50 hover:text-indigo-300 hover:border-indigo-500/50"
+        >
+          <span className="text-[11px] font-black tracking-wider">🌐 {language.toUpperCase()}</span>
+        </Button>
+
         {/* Theme Toggle Button */}
         <Button 
           variant="icon" 
           onClick={onToggleTheme} 
-          title={theme === 'light' ? "Modo Oscuro" : "Modo Sensorial"}
+          title={theme === 'light' ? t('themeToggleDark') : t('themeToggleLight')}
           className={theme === 'light' ? "text-amber-500 border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.4)]" : "text-violet-400 border-indigo-900/50"}
         >
           {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
@@ -65,7 +78,7 @@ export const GameHeader = ({
         <Button 
           variant="icon" 
           onClick={onToggleMusic} 
-          title={musicEnabled ? "Silenciar Música" : "Activar Música"}
+          title={musicEnabled ? t('headerMuteMusic') : t('headerUnmuteMusic')}
           className={musicEnabled ? "text-cyan-400 border-cyan-500/50 shadow-[0_0_8px_rgba(6,182,212,0.4)]" : ""}
         >
           <Music size={18} className={musicEnabled ? "animate-spin-slow" : ""} />
@@ -75,7 +88,7 @@ export const GameHeader = ({
         <Button 
           variant="icon" 
           onClick={onToggleSFX} 
-          title={sfxEnabled ? "Silenciar Efectos" : "Activar Efectos"}
+          title={sfxEnabled ? t('headerMuteSFX') : t('headerUnmuteSFX')}
           className={sfxEnabled ? "text-emerald-400 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : ""}
         >
           {sfxEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
@@ -85,22 +98,22 @@ export const GameHeader = ({
         <Button 
           variant="ghost" 
           onClick={onRestart}
-          title="Reiniciar partida"
+          title={t('headerRestartGameTitle')}
           className="border border-indigo-500/40 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)] hover:shadow-[0_0_18px_rgba(99,102,241,0.6)]"
         >
           <RotateCcw size={14} />
-          <span>Reiniciar</span>
+          <span>{t('headerRestartBtn')}</span>
         </Button>
 
         {/* Home/Exit button */}
         <Button 
           variant="ghost" 
           onClick={onExitToSetup}
-          title="Volver a la configuración"
+          title={t('headerExitSetupTitle')}
           className="border border-indigo-500/40 text-white shadow-[0_0_10px_rgba(99,102,241,0.3)] hover:shadow-[0_0_18px_rgba(99,102,241,0.6)]"
         >
           <Home size={14} />
-          <span>Inicio</span>
+          <span>{t('headerHomeBtn')}</span>
         </Button>
       </div>
 

@@ -1,15 +1,16 @@
 export const StreakTracker = ({ 
   streakCount = 0, 
-  weeklyActivity = [false, false, false, false, false, false, false] // L, M, M, J, V, S, D
+  weeklyActivity = [false, false, false, false, false, false, false], // L, M, M, J, V, S, D
+  t
 }) => {
   const daysOfWeek = [
-    { label: 'L', name: 'Lunes' },
-    { label: 'M', name: 'Martes' },
-    { label: 'M', name: 'Miércoles' },
-    { label: 'J', name: 'Jueves' },
-    { label: 'V', name: 'Viernes' },
-    { label: 'S', name: 'Sábado' },
-    { label: 'D', name: 'Domingo' }
+    { label: t('dayLabelL'), name: t('dayNameL') },
+    { label: t('dayLabelM'), name: t('dayNameM') },
+    { label: t('dayLabelMi'), name: t('dayNameMi') },
+    { label: t('dayLabelJ'), name: t('dayNameJ') },
+    { label: t('dayLabelV'), name: t('dayNameV') },
+    { label: t('dayLabelS'), name: t('dayNameS') },
+    { label: t('dayLabelD'), name: t('dayNameD') }
   ];
 
   // Get current day index (0 = Monday, ..., 6 = Sunday)
@@ -21,10 +22,10 @@ export const StreakTracker = ({
       <div className="flex justify-between items-center">
         <span className="text-orange-400 font-bold flex items-center gap-1.5 text-xs select-none">
           <span className="text-base drop-shadow-[0_0_5px_rgba(251,146,60,0.6)] animate-pulse">🔥</span> 
-          Racha actual
+          {t('streakTitle')}
         </span>
         <span className="text-yellow-400 font-title text-sm drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">
-          {streakCount} {streakCount === 1 ? 'día' : 'días'}
+          {streakCount} {streakCount === 1 ? t('streakDaySingular') : t('streakDayPlural')}
         </span>
       </div>
 

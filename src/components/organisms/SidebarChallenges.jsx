@@ -8,7 +8,8 @@ export const SidebarChallenges = ({
   maxXP = 1000, 
   streakCount = 0,
   weeklyActivity = [false, false, false, false, false, false, false],
-  challengesState = { ch3: false, chHalf: false, chAll: false }
+  challengesState = { ch3: false, chHalf: false, chAll: false },
+  t
 }) => {
   // Determine dynamically the requirements for challenges based on pairsCount
   const ch3Req = 3;
@@ -17,11 +18,11 @@ export const SidebarChallenges = ({
 
   // Ranks based on Level
   const getRank = (lvl) => {
-    if (lvl === 1) return { title: 'Novato', color: 'text-cyan-400' };
-    if (lvl <= 3) return { title: 'Programador', color: 'text-indigo-400' };
-    if (lvl <= 5) return { title: 'Desarrollador', color: 'text-pink-400' };
-    if (lvl <= 7) return { title: 'Senior', color: 'text-emerald-400' };
-    return { title: 'Master Hacker', color: 'text-amber-400' };
+    if (lvl === 1) return { title: t('rankNovice'), color: 'text-cyan-400' };
+    if (lvl <= 3) return { title: t('rankProgrammer'), color: 'text-indigo-400' };
+    if (lvl <= 5) return { title: t('rankDeveloper'), color: 'text-pink-400' };
+    if (lvl <= 7) return { title: t('rankSenior'), color: 'text-emerald-400' };
+    return { title: t('rankMaster'), color: 'text-amber-400' };
   };
 
   const rank = getRank(playerLevel);
@@ -33,7 +34,7 @@ export const SidebarChallenges = ({
       <div className="glass-panel w-full p-4">
         <h3 className="text-yellow-400 font-bold flex items-center gap-2 mb-4 font-title text-sm sm:text-base select-none">
           <span className="text-xl drop-shadow-[0_2px_5px_rgba(234,179,8,0.5)]">🏆</span> 
-          Desafíos
+          {t('challengesTitle')}
         </h3>
         <div className="flex flex-col gap-3">
           {/* Challenge 1 */}
@@ -47,7 +48,7 @@ export const SidebarChallenges = ({
                 {challengesState.ch3 ? '✓' : '•'}
               </span>
               <span className={`text-xs ${challengesState.ch3 ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
-                Completa {ch3Req} parejas
+                {t('challengePairs3')}
               </span>
             </div>
             <span className="text-xs text-yellow-500 font-black">+10 pts</span>
@@ -64,7 +65,7 @@ export const SidebarChallenges = ({
                 {challengesState.chHalf ? '✓' : '•'}
               </span>
               <span className={`text-xs ${challengesState.chHalf ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
-                Completa {chHalfReq} parejas
+                {t('challengePairsHalf')} ({chHalfReq})
               </span>
             </div>
             <span className="text-xs text-yellow-500 font-black">+20 pts</span>
@@ -81,7 +82,7 @@ export const SidebarChallenges = ({
                 {challengesState.chAll ? '✓' : '•'}
               </span>
               <span className={`text-xs ${challengesState.chAll ? 'text-purple-400 font-bold' : 'text-slate-300'}`}>
-                Completa {chAllReq} parejas
+                {t('challengePairsAll')}
               </span>
             </div>
             <span className="text-xs text-purple-400 font-black">+50 pts</span>
@@ -93,7 +94,7 @@ export const SidebarChallenges = ({
       <div className="glass-panel w-full p-4">
         <h3 className="text-cyan-400 font-bold flex items-center gap-2 mb-4 font-title text-sm sm:text-base select-none">
           <span className="text-xl">📈</span> 
-          Tu progreso
+          {t('progressTitle')}
         </h3>
         <div className="flex items-center gap-3">
           <div className="flex-1 flex flex-col gap-2">
@@ -122,7 +123,8 @@ export const SidebarChallenges = ({
       </div>
 
       {/* Streak Tracker */}
-      <StreakTracker streakCount={streakCount} weeklyActivity={weeklyActivity} />
+      <StreakTracker streakCount={streakCount} weeklyActivity={weeklyActivity} t={t} />
     </div>
   );
 };
+

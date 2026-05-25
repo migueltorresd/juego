@@ -8,7 +8,7 @@ import { RobotDialog } from '../components/organisms/RobotDialog';
 import { TipPanel } from '../components/molecules/TipPanel';
 import { Button } from '../components/atoms/Button';
 import { Slider } from '../components/atoms/Slider';
-import { conceptsData, codingTips } from '../data/concepts';
+import { conceptsData, codingTips, translations } from '../data/concepts';
 import { sound } from '../services/sound';
 import { HelpCircle, Lightbulb, Search } from 'lucide-react';
 import mascotImage from '../assets/pyt.png';
@@ -17,6 +17,32 @@ export const GamePage = () => {
   // -------------------------------------------------------------
   // ESTADOS DEL JUEGO GENERAL
   // -------------------------------------------------------------
+  // Idioma del juego (es / en)
+  const [language, setLanguage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('codememory_lang');
+      if (saved === 'es' || saved === 'en') return saved;
+      const sysLang = navigator.language || navigator.userLanguage || 'es';
+      return sysLang.startsWith('en') ? 'en' : 'es';
+    } catch {
+      return 'es';
+    }
+  });
+
+  // Helper de traducción dinámico
+  const t = (key, params = {}) => {
+    try {
+      const dict = translations[language] || translations['es'];
+      let text = dict[key] || key;
+      Object.keys(params).forEach(param => {
+        text = text.replaceAll(`{${param}}`, params[param]);
+      });
+      return text;
+    } catch {
+      return key;
+    }
+  };
+
   const [gameStarted, setGameStarted] = useState(false);
   const [difficulty, setDifficulty] = useState('basic');
   const [pairsCount, setPairsCount] = useState(12);
@@ -123,14 +149,34 @@ export const GamePage = () => {
     }
   }, [theme]);
 
+  // Sincronizar idioma con localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('codememory_lang', language);
+    } catch (e) {
+      console.error("Error guardando idioma:", e);
+    }
+  }, [language]);
+
+  // Actualizar diálogo de bienvenida al cambiar de idioma
+  useEffect(() => {
+    if (!gameStarted) {
+      setRobotDialog({
+        title: t('robotWelcomeTitle'),
+        message: t('robotWelcome'),
+        expression: 'happy'
+      });
+    }
+  }, [language, gameStarted]);
+
   // Rotador de tips automático cada 8 segundos
   useEffect(() => {
     if (!gameStarted) return;
     const interval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % codingTips.length);
+      setTipIndex((prev) => (prev + 1) % codingTips[language].length);
     }, 8000);
     return () => clearInterval(interval);
-  }, [gameStarted]);
+  }, [gameStarted, language]);
 
   // Calcular racha en victoria
   const updateStreakAndXP = (xpEarned) => {
@@ -210,8 +256,8 @@ export const GamePage = () => {
       setTimeout(() => {
         sound.playLevelUp();
         setRobotDialog({
-          title: '¡Subiste de nivel! 🎉',
-          message: `¡Buenísimo! Pasaste al nivel ${newLvl}. ¡Seguí así!`,
+          title: t('robotLevelUpTitle'),
+          message: t('robotLevelUpMsg', { level: newLvl }),
           expression: 'happy'
         });
       }, 1500);
@@ -223,10 +269,10 @@ export const GamePage = () => {
   // -------------------------------------------------------------
   const handleAddPlayer = () => {
     if (playerNames.length >= 4) {
-      alert("¡El máximo es 4 jugadores!");
+      alert(language === 'es' ? "¡El máximo es 4 jugadores!" : "Maximum of 4 players reached!");
       return;
     }
-    setPlayerNames([...playerNames, `JUGADOR ${playerNames.length + 1}`]);
+    setPlayerNames([...playerNames, (language === 'es' ? 'JUGADOR' : 'PLAYER') + ` ${playerNames.length + 1}`]);
   };
 
   const handleRemovePlayer = () => {
@@ -249,7 +295,7 @@ export const GamePage = () => {
     // Configurar jugadores
     const initialPlayers = playerNames.map((name, index) => ({
       id: index,
-      name: name.trim() || `JUGADOR ${index + 1}`,
+      name: name.trim() || `${language === 'es' ? 'JUGADOR' : 'PLAYER'} ${index + 1}`,
       score: 0,
       avatar: avatars[index],
       colorClass: `p-color-${index}`
@@ -267,7 +313,7 @@ export const GamePage = () => {
     setShowVictoryModal(false);
 
     // Seleccionar y barajar cartas de forma dinámica
-    const pool = conceptsData[difficulty];
+    const pool = conceptsData[language][difficulty];
     const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
     const selectedConcepts = shuffledPool.slice(0, pairsCount);
 
@@ -309,8 +355,11 @@ export const GamePage = () => {
     // Activar estados
     setGameStarted(true);
     setRobotDialog({
-      title: `¡Empezamos! 🚀`,
-      message: `Dificultad: ${difficulty === 'basic' ? 'Básico' : difficulty === 'intermediate' ? 'Intermedio' : 'Avanzado'}. Juega primero ${initialPlayers[0].name}. ¡Mucha suerte!`,
+      title: t('robotStartTitle'),
+      message: t('robotStartMsg', {
+        diff: difficulty === 'basic' ? t('difficultyBasic') : difficulty === 'intermediate' ? t('difficultyIntermediate') : t('difficultyAdvanced'),
+        player: initialPlayers[0].name
+      }),
       expression: 'happy'
     });
 
@@ -330,8 +379,8 @@ export const GamePage = () => {
     setShowVictoryModal(false);
     sound.stopMusic();
     setRobotDialog({
-      title: '¡Hola! 🤖',
-      message: 'Ingresá el nombre de los jugadores, elegí el nivel y cuántas parejas querés buscar para empezar.',
+      title: t('robotWelcomeTitle'),
+      message: t('robotWelcome'),
       expression: 'happy'
     });
   };
@@ -356,8 +405,8 @@ export const GamePage = () => {
     // Si es la primera carta volteada
     if (newFlipped.length === 1) {
       setRobotDialog({
-        title: `Buscando pareja... 🧠`,
-        message: `${players[currentPlayerIndex].name} dio vuelta "${cards[index].text}". ¿Dónde estará la otra?`,
+        title: t('robotSearchingTitle'),
+        message: t('robotSearchingMsg', { player: players[currentPlayerIndex].name, card: cards[index].text }),
         expression: 'thinking'
       });
       return;
@@ -416,17 +465,17 @@ export const GamePage = () => {
     if (newGlobalMatches === ch3Req && !challengesState.ch3) {
       updatedPlayers[currentPlayerIndex].score += 10;
       updatedChallenges.ch3 = true;
-      challengeMsg = ` ¡Y completó el desafío de 3 parejas (+10 pts)!`;
+      challengeMsg = t('challengeMsg3');
     }
     if (newGlobalMatches === chHalfReq && !challengesState.chHalf) {
       updatedPlayers[currentPlayerIndex].score += 20;
       updatedChallenges.chHalf = true;
-      challengeMsg = ` ¡Y completó el desafío de la mitad (+20 pts)!`;
+      challengeMsg = t('challengeMsgHalf');
     }
     if (newGlobalMatches === chAllReq && !challengesState.chAll) {
       updatedPlayers[currentPlayerIndex].score += 50;
       updatedChallenges.chAll = true;
-      challengeMsg = ` ¡Y completó el desafío maestro (+50 pts)!`;
+      challengeMsg = t('challengeMsgAll');
     }
 
     setChallengesState(updatedChallenges);
@@ -444,11 +493,11 @@ export const GamePage = () => {
     setLeaderId(leader);
 
     // Obtener concepto y descripción para el robot
-    const matchedConcept = conceptsData[difficulty].find(c => c.id === cards[idx1].conceptId);
+    const matchedConcept = conceptsData[language][difficulty].find(c => c.id === cards[idx1].conceptId);
     
     setRobotDialog({
-      title: `¡Excelente acierto! 😍${challengeMsg}`,
-      message: `Encontraste la pareja: ${matchedConcept.title} = ${matchedConcept.description}`,
+      title: t('robotMatchTitle', { challenge: challengeMsg }),
+      message: t('robotMatchMsg', { concept: matchedConcept.title, desc: matchedConcept.description }),
       expression: 'happy'
     });
 
@@ -477,8 +526,8 @@ export const GamePage = () => {
     setCurrentPlayerIndex(nextPlayerIndex);
 
     setRobotDialog({
-      title: `¡No coincide! 😢`,
-      message: `Las cartas no son iguales. Ahora juega ${players[nextPlayerIndex].name}. ¡Prestá mucha atención!`,
+      title: t('robotMismatchTitle'),
+      message: t('robotMismatchMsg', { player: players[nextPlayerIndex].name }),
       expression: 'sad'
     });
 
@@ -535,8 +584,8 @@ export const GamePage = () => {
       setCards(updatedCards);
 
       setRobotDialog({
-        title: '¡Una ayudita! 🔍',
-        message: `Te muestro las cartas por un segundo. ¡Memorizá dónde están!`,
+        title: t('robotHelpTitle'),
+        message: t('robotHelpMsg'),
         expression: 'happy'
       });
 
@@ -565,11 +614,11 @@ export const GamePage = () => {
     const unmatched = cards.filter(c => !c.isMatched);
     if (unmatched.length > 0) {
       const randomCard = unmatched[Math.floor(Math.random() * unmatched.length)];
-      const concept = conceptsData[difficulty].find(c => c.id === randomCard.conceptId);
+      const concept = conceptsData[language][difficulty].find(c => c.id === randomCard.conceptId);
 
       setRobotDialog({
-        title: `Una pista 💡 (${tipsLeft - 1} restantes)`,
-        message: `El concepto "${concept.title}" significa: "${concept.description}". ¡Búscalo en el tablero!`,
+        title: t('robotHintTitle', { rem: tipsLeft - 1 }),
+        message: t('robotHintMsg', { concept: concept.title, desc: concept.description }),
         expression: 'thinking'
       });
     }
@@ -599,29 +648,36 @@ export const GamePage = () => {
     return (
       <div id="setup-screen" className="fullscreen-modal flex justify-center items-center min-h-screen bg-[#060814]">
         <div className="glass-panel p-5 sm:p-6 max-w-md w-full text-center m-4 max-h-[95vh] overflow-y-auto relative">
-          {/* Selector de Tema Accesible */}
-          <div className="flex justify-end mb-2">
+          {/* Selector de Tema e Idioma Accesible */}
+          <div className="flex justify-between items-center mb-4">
+            <button 
+              type="button"
+              onClick={() => setLanguage(prev => prev === 'es' ? 'en' : 'es')}
+              className="px-2.5 py-1 bg-slate-900/60 border border-slate-700/35 rounded-xl text-xs font-black tracking-wide hover:bg-slate-900 transition flex items-center gap-1.5 cursor-pointer text-indigo-300 animate-pulse"
+            >
+              {t('langToggle')}
+            </button>
             <button 
               type="button"
               onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
               className="px-2.5 py-1 bg-slate-900/60 border border-slate-700/35 rounded-xl text-xs font-black tracking-wide hover:bg-slate-900 transition flex items-center gap-1.5 cursor-pointer text-indigo-300"
             >
-              {theme === 'light' ? '🌙 Modo Oscuro' : '☀️ Modo Sensorial (Claro)'}
+              {theme === 'light' ? t('themeToggleDark') : t('themeToggleLight')}
             </button>
           </div>
           
           {/* Logo y Título */}
           <h1 className="text-2xl sm:text-3.5xl text-white mb-1 font-title text-center block">
-            🎮 Concéntrese de <span className="text-glow-cyan">Código</span>
+            🎮 {t('setupTitle')}
           </h1>
           <p className="text-indigo-200 mb-4 font-bold text-xs tracking-wider uppercase">
-            CONFIGURA LA PARTIDA
+            {t('setupSubtitle')}
           </p>
 
           {/* Inputs de Jugadores */}
           <div className="space-y-2 mb-4 text-left">
             <label className="block text-slate-400 text-[0.65rem] font-black uppercase tracking-wider mb-0.5">
-              Nombre de los Jugadores (Máx 4):
+              {t('playerNamesLabel')}
             </label>
             
             {playerNames.map((name, index) => (
@@ -635,7 +691,7 @@ export const GamePage = () => {
                 <input 
                   type="text" 
                   className="flex-1 bg-transparent text-sm sm:text-base font-extrabold outline-none text-white placeholder-slate-500 uppercase tracking-wide" 
-                  placeholder={`Jugador ${index + 1}`} 
+                  placeholder={`${language === 'es' ? 'Jugador' : 'Player'} ${index + 1}`} 
                   value={name} 
                   onChange={(e) => handleNameChange(index, e.target.value)} 
                   maxLength={10}
@@ -647,17 +703,17 @@ export const GamePage = () => {
           {/* Controles para Añadir/Remover jugadores */}
           <div className="flex justify-center gap-2.5 mb-4">
             <Button variant="danger" onClick={handleRemovePlayer} disabled={playerNames.length <= 1}>
-              ➖ Quitar Jugador
+              {t('removePlayerBtn')}
             </Button>
             <Button variant="success" onClick={handleAddPlayer} disabled={playerNames.length >= 4}>
-              ➕ Agregar (Max 4)
+              {t('addPlayerBtn')}
             </Button>
           </div>
 
           {/* Selector de Nivel */}
           <div className="mb-4 text-left bg-slate-900/60 border border-indigo-950 p-3 rounded-xl shadow-inner">
             <label className="block text-indigo-300 font-black text-[0.65rem] uppercase tracking-wider mb-2 text-center">
-              Selecciona el Nivel de Dificultad:
+              {t('selectDifficultyLabel')}
             </label>
             <div className="grid grid-cols-3 gap-2">
               
@@ -673,8 +729,8 @@ export const GamePage = () => {
                 />
                 <div className="h-full border-2 border-slate-800 rounded-lg p-2 text-center peer-checked:border-cyan-400 peer-checked:bg-cyan-950/20 transition bg-slate-950/40 hover:bg-slate-900/80">
                   <div className="text-lg mb-0.5 select-none">🌱</div>
-                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">Básico</div>
-                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">Fundamentos</div>
+                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">{t('difficultyBasic')}</div>
+                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">{t('difficultyBasicSub')}</div>
                 </div>
               </label>
 
@@ -690,8 +746,8 @@ export const GamePage = () => {
                 />
                 <div className="h-full border-2 border-slate-800 rounded-lg p-2 text-center peer-checked:border-pink-400 peer-checked:bg-pink-950/20 transition bg-slate-950/40 hover:bg-slate-900/80">
                   <div className="text-lg mb-0.5 select-none">🏗️</div>
-                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">Intermedio</div>
-                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">POO y Clases</div>
+                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">{t('difficultyIntermediate')}</div>
+                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">{t('difficultyIntermediateSub')}</div>
                 </div>
               </label>
 
@@ -707,8 +763,8 @@ export const GamePage = () => {
                 />
                 <div className="h-full border-2 border-slate-800 rounded-lg p-2 text-center peer-checked:border-emerald-400 peer-checked:bg-emerald-950/20 transition bg-slate-950/40 hover:bg-slate-900/80">
                   <div className="text-lg mb-0.5 select-none">🚀</div>
-                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">Avanzado</div>
-                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">Git y Web</div>
+                  <div className="text-[0.65rem] text-slate-200 font-black tracking-wide">{t('difficultyAdvanced')}</div>
+                  <div className="text-[0.5rem] text-slate-500 mt-0.5 uppercase font-bold">{t('difficultyAdvancedSub')}</div>
                 </div>
               </label>
 
@@ -718,17 +774,17 @@ export const GamePage = () => {
           {/* Configuración del Tutor */}
           <div className="mb-5 text-left bg-slate-900/60 border border-indigo-950 p-3 rounded-xl shadow-inner">
             <label className="block text-indigo-300 font-black text-[0.65rem] uppercase tracking-wider mb-1.5 text-center">
-              ⚙️ CONFIGURACIÓN DEL PROFESOR
+              {t('teacherConfigLabel')}
             </label>
             <Slider 
               min={7} 
               max={16} 
               value={pairsCount} 
               onChange={setPairsCount}
-              label="Parejas a encontrar"
+              label={t('pairsCountLabel')}
             />
             <p className="text-[0.6rem] text-slate-400 text-center mt-1 font-medium">
-              Elige entre 7 y 16 parejas. El tablero se ajusta automáticamente.
+              {t('pairsConfigSub')}
             </p>
           </div>
 
@@ -738,7 +794,7 @@ export const GamePage = () => {
             className="w-full text-lg py-2.5 rounded-xl tracking-widest font-title"
             onClick={handleStartGame}
           >
-            ¡A Jugar! 🚀
+            {t('playBtn')}
           </Button>
 
         </div>
@@ -748,7 +804,11 @@ export const GamePage = () => {
 
   // B. PANTALLA PRINCIPAL DEL JUEGO
   const maxXP = playerLevel * 500;
-  const levelNames = { basic: 'Básico', intermediate: 'Intermedio (POO)', advanced: 'Avanzado' };
+  const levelNames = { 
+    basic: t('difficultyBasic'), 
+    intermediate: `${t('difficultyIntermediate')} (POO)`, 
+    advanced: t('difficultyAdvanced') 
+  };
 
   return (
     <div className="relative w-full min-h-screen bg-[#060814]">
@@ -761,11 +821,14 @@ export const GamePage = () => {
             musicEnabled={musicEnabled} 
             sfxEnabled={sfxEnabled} 
             theme={theme}
+            language={language}
+            onToggleLanguage={() => setLanguage(prev => prev === 'es' ? 'en' : 'es')}
             onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
             onToggleMusic={handleToggleMusic} 
             onToggleSFX={handleToggleSFX} 
             onRestart={handleRestart} 
             onExitToSetup={handleExitToSetup}
+            t={t}
           />
         }
         scoreboard={
@@ -777,7 +840,7 @@ export const GamePage = () => {
         }
         leftSidebar={
           <>
-            <TipPanel tipText={codingTips[tipIndex]} />
+            <TipPanel tipText={codingTips[language][tipIndex]} t={t} />
             
             {/* Mascot Illustration Panel (fills the empty space elegantly) */}
             <div className="flex-grow flex items-center justify-center py-3 select-none animate-fade-in w-full">
@@ -795,7 +858,7 @@ export const GamePage = () => {
                 <div className="relative w-full max-w-[200px] lg:max-w-[245px] xl:max-w-[210px] transition-transform duration-500 hover:scale-105">
                   <img 
                     src={mascotImage} 
-                    alt="Mascota Lagarto Programador" 
+                    alt={t('tipPanelMascotAlt')} 
                     className="w-full h-auto object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.55)]"
                   />
                 </div>
@@ -805,12 +868,12 @@ export const GamePage = () => {
             <Button 
               variant="secondary" 
               onClick={() => {
-                alert("¿Cómo jugar?\n\n1. Por turnos, cada jugador voltea dos cartas.\n2. Si las cartas coinciden (según el nivel), el jugador suma +5 pts y juega de nuevo.\n3. Si no coinciden, se voltean de regreso y pasa el turno.\n4. ¡El jugador con más puntos cuando se encuentren todas las parejas gana la partida!\n\nConsejo: ¡Usa las pistas del robot si te quedas atascado!");
+                alert(t('howToPlayText'));
               }}
               className="w-full py-3.5 border border-indigo-950/60 shadow-lg text-indigo-300 shrink-0"
             >
               <HelpCircle size={16} />
-              <span>¿Cómo jugar?</span>
+              <span>{t('howToPlayTitle')}</span>
             </Button>
           </>
         }
@@ -826,7 +889,7 @@ export const GamePage = () => {
             <span className={`text-xs sm:text-sm font-black ${
               theme === 'light' ? 'text-slate-700' : 'text-slate-300'
             } uppercase tracking-wider`}>
-              Parejas encontradas:{' '}
+              {t('pairsFoundLabel')}{' '}
               <span className={`${
                 theme === 'light' ? 'text-indigo-600' : 'text-cyan-400'
               } font-title text-base sm:text-2xl ml-1 drop-shadow-sm`}>
@@ -868,6 +931,7 @@ export const GamePage = () => {
             streakCount={streakCount} 
             weeklyActivity={weeklyActivity} 
             challengesState={challengesState} 
+            t={t}
           />
         }
         bottomDialog={
@@ -887,7 +951,7 @@ export const GamePage = () => {
               className="flex-1 md:flex-none py-2 px-4 border border-indigo-900/40 text-slate-200 text-xs sm:text-sm"
             >
               <Lightbulb size={14} className="text-yellow-400" />
-              <span>Dica {tipsLeft}</span>
+              <span>{t('clueBtn')} {tipsLeft}</span>
             </Button>
 
             {/* Hint reveal button */}
@@ -898,7 +962,7 @@ export const GamePage = () => {
               className="flex-1 md:flex-none py-2 px-4 border border-indigo-900/40 text-slate-200 text-xs sm:text-sm"
             >
               <Search size={14} className="text-cyan-400" />
-              <span>Pistas {hintsLeft}</span>
+              <span>{t('hintBtn')} {hintsLeft}</span>
             </Button>
           </div>
         }
@@ -912,10 +976,10 @@ export const GamePage = () => {
             <div className="text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_20px_rgba(234,179,8,0.7)] select-none">🏆</div>
             
             <h2 className="text-3xl sm:text-4xl text-emerald-400 mb-2 font-title text-glow-cyan">
-              ¡Partida Terminada!
+              {t('victoryTitle')}
             </h2>
             <p className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-5">
-              ¡Encontraron todas las parejas!
+              {t('victorySubtitle')}
             </p>
 
             {/* Resultados y Podio */}
@@ -930,13 +994,13 @@ export const GamePage = () => {
                   if (winners.length > 1) {
                     return (
                       <p className="text-xl text-cyan-400 font-title">
-                        ¡Hubo un empate! 💻
+                        {t('victoryWinnerTie')}
                       </p>
                     );
                   }
                   return (
                     <p className="text-2xl text-emerald-400 font-title">
-                      ¡{winners[0].name} ganó la partida!
+                      {t('victoryWinnerMsg', { winner: winners[0].name })}
                     </p>
                   );
                 })()}
@@ -963,7 +1027,7 @@ export const GamePage = () => {
                           <span className="uppercase tracking-wide">{p.name}</span>
                         </span>
                         <span className="text-xl font-title text-glow-cyan">
-                          {p.score} <span className="text-slate-400 text-xs font-bold">pts</span>
+                          {p.score} <span className="text-slate-400 text-xs font-bold">{t('victoryPointsShort')}</span>
                         </span>
                       </div>
                     );
@@ -972,7 +1036,7 @@ export const GamePage = () => {
 
               <div className="text-center pt-3 select-none">
                 <span className="bg-indigo-950/70 border border-indigo-900/40 text-indigo-300 text-xs px-3 py-1.5 rounded-xl font-black">
-                  🔥 +{difficulty === 'basic' ? 150 : difficulty === 'intermediate' ? 250 : 400} XP para tu perfil
+                  🔥 +{difficulty === 'basic' ? 150 : difficulty === 'intermediate' ? 250 : 400} {t('xpRewardTip')}
                 </span>
               </div>
             </div>
@@ -980,10 +1044,10 @@ export const GamePage = () => {
             {/* Controles del Modal de Victoria */}
             <div className="flex flex-col gap-2.5 mt-6">
               <Button variant="neon" className="w-full py-3" onClick={handleRestart}>
-                Jugar de nuevo 🔄
+                {t('victoryRestartBtn')}
               </Button>
               <Button variant="secondary" className="w-full py-3" onClick={handleExitToSetup}>
-                Cambiar opciones ⚙️
+                {t('victoryChangeOptionsBtn')}
               </Button>
             </div>
 
