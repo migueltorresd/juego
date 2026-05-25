@@ -878,7 +878,7 @@ export const GamePage = () => {
 
       {/* C. MODAL DE VICTORIA */}
       {showVictoryModal && (
-        <div id="victory-modal" className="fullscreen-modal flex justify-center items-center bg-[#020621]/90 z-50">
+        <div id="victory-modal" className="fixed inset-0 flex justify-center items-center bg-[#020621]/90 z-50">
           <div className="glass-panel p-8 max-w-md w-full text-center m-4 border-t-4 border-emerald-400 animate-bounce-custom">
             
             <div className="text-6xl sm:text-7xl mb-4 drop-shadow-[0_0_20px_rgba(234,179,8,0.7)] select-none">🏆</div>
